@@ -1,9 +1,9 @@
-var pathlib = require('path')
+const pathlib = require('path');
 
-var BrowserPageSearch = React.createClass({
+const BrowserPageSearch = React.createClass({
   componentDidUpdate: function (prevProps) {
     if (!prevProps.isActive && this.props.isActive)
-      this.refs.input.getDOMNode().focus()
+      this.refs.input.focus()
   },
   shouldComponentUpdate: function (nextProps, nextState) {
     return (this.props.isActive != nextProps.isActive)
@@ -21,7 +21,7 @@ var BrowserPageSearch = React.createClass({
   }
 })
 
-var BrowserPageStatus = React.createClass({
+const BrowserPageStatus = React.createClass({
   render: function () {
     var status = this.props.page.statusText
     if (!status && this.props.page.isLoading)
@@ -30,50 +30,14 @@ var BrowserPageStatus = React.createClass({
   }
 })
 
-var BrowserPage = React.createClass({
-  componentDidMount: function () {
-    // setup resize events
-    window.addEventListener('resize', resize)
-    resize()
-
-    // attach webview events
-    for (var k in webviewEvents)
-      this.refs.webview.getDOMNode().addEventListener(k, webviewHandler(this, webviewEvents[k]))
-
-    // set location, if given
-    if (this.props.page.location)
-      this.navigateTo(this.props.page.location)
-  },
-  componentWillUnmount: function () {
-    window.removeEventListener('resize', resize)    
-  },
-
-  navigateTo: function (l) {
-    var webview = this.refs.webview.getDOMNode()
-    webview.setAttribute('src', l)
-  },
-
-  onPageSearch: function (query) {
-    this.refs.webview.getDOMNode().executeJavaScript('window.find("'+query+'", 0, 0, 1)')
-  },
-
-  render: function () {
-    return <div id="browser-page" className={this.props.isActive ? 'visible' : 'hidden'}>
-      <BrowserPageSearch isActive={this.props.page.isSearching} onPageSearch={this.onPageSearch} />
-      <webview ref="webview" preload="./preload/main.js" onContextMenu={this.props.onContextMenu} />
-      <BrowserPageStatus page={this.props.page} />
-    </div>
-  }  
-})
-
-function webviewHandler (self, fnName) {
+function webviewHandler(self, fnName) {
   return function (e) {
     if (self.props[fnName])
       self.props[fnName](e, self.props.page, self.props.pageIndex)
   }
 }
 
-var webviewEvents = {
+const webviewEvents = {
   'load-commit': 'onLoadCommit',
   'did-start-loading': 'onDidStartLoading',
   'did-stop-loading': 'onDidStopLoading',
@@ -87,12 +51,50 @@ var webviewEvents = {
   'destroyed': 'onDestroyed',
   'ipc-message': 'onIpcMessage',
   'console-message': 'onConsoleMessage'
-}
+};
 
-function resize () {
+function resize() {
   Array.prototype.forEach.call(document.querySelectorAll('webview'), function (webview) {
     var obj = webview && webview.querySelector('::shadow object')
     if (obj)
       obj.style.height = (window.innerHeight - 59) + 'px' // -61 to adjust for the tabs and navbar regions
   })
 }
+
+const BrowserPage = React.createClass({
+  componentDidMount: function () {
+    // setup resize events
+    window.addEventListener('resize', resize)
+    resize()
+
+    // attach webview events
+    for (var k in webviewEvents)
+      this.refs.webview.addEventListener(k, webviewHandler(this, webviewEvents[k]))
+
+    // set location, if given
+    if (this.props.page.location)
+      this.navigateTo(this.props.page.location)
+  },
+  componentWillUnmount: function () {
+    window.removeEventListener('resize', resize)
+  },
+
+  navigateTo: function (l) {
+    var webview = this.refs.webview
+    webview.setAttribute('src', l)
+  },
+
+  onPageSearch: function (query) {
+    this.refs.webview.executeJavaScript('window.find("' + query + '", 0, 0, 1)')
+  },
+
+  render: function () {
+    return <div id="browser-page" className={this.props.isActive ? 'visible' : 'hidden'}>
+      <BrowserPageSearch isActive={this.props.page.isSearching} onPageSearch={this.onPageSearch} />
+      <webview ref="webview" preload="./preload/main.js" onContextMenu={this.props.onContextMenu} />
+      <BrowserPageStatus page={this.props.page} />
+    </div>
+  }
+});
+
+export default BrowserPage;

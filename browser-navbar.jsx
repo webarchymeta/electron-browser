@@ -8,13 +8,13 @@ function normalizedUri(input) {
   return input;
 }
 
-var BrowserNavbarBtn = React.createClass({
-  render: function() {
-    return <a href="#" className={this.props.disabled?'disabled':''} title={this.props.title} onClick={this.props.onClick}><i className={'fa fa-'+this.props.icon} /></a>
+const BrowserNavbarBtn = React.createClass({
+  render: function () {
+    return <a href="#" className={this.props.disabled ? 'disabled' : ''} title={this.props.title} onClick={this.props.onClick}><i className={'fa fa-' + this.props.icon} /></a>
   }
-})
+});
 
-var BrowserNavbarLocation = React.createClass({
+const BrowserNavbarLocation = React.createClass({
   onKeyDown: function (e) {
     if (e.keyCode == 13)
       this.props.onEnterLocation(normalizedUri(e.target.value))
@@ -22,15 +22,13 @@ var BrowserNavbarLocation = React.createClass({
   onChange: function (e) {
     this.props.onChangeLocation(normalizedUri(e.target.value))
   },
-  render: function() {
+  render: function () {
     return <input type="text" onKeyDown={this.onKeyDown} onChange={this.onChange} onContextMenu={this.props.onContextMenu} value={this.props.page.location} />
   }
-})
+});
 
-
-
-var BrowserNavbar = React.createClass({
-  render: function() {
+const BrowserNavbar = React.createClass({
+  render: function () {
     return <div id="browser-navbar">
       <BrowserNavbarBtn title="Rewind" icon="angle-double-left fa-lg" onClick={this.props.onClickHome} disabled={!this.props.page.canGoBack} />
       <BrowserNavbarBtn title="Back" icon="angle-left fa-lg" onClick={this.props.onClickBack} disabled={!this.props.page.canGoBack} />
@@ -41,4 +39,6 @@ var BrowserNavbar = React.createClass({
       </div>
     </div>
   }
-})
+});
+
+export default BrowserNavbar;

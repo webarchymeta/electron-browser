@@ -1,13 +1,17 @@
 'use strict'
-var remote = require('remote')
-var Menu = remote.require('menu')
-var MenuItem = remote.require('menu-item')
-var clipboard = require('clipboard')
-var urllib = require('url')
 
-function createPageObject (location) {
+import BrowserTabs from './browser-tabs.jsx';
+import BrowserNavbar from './browser-navbar.jsx';
+import BrowserPage from './browser-page.jsx';
+
+const {remote} = require('electron');
+const {Menu, MenuItem, clipboard} = remote;
+
+var urllib = require('url');
+
+function createPageObject(location) {
   return {
-    location: location||'https://github.com/pfraze/electron-browser',
+    location: location || process.env.START_URL || 'https://github.com/pfraze/electron-browser',
     statusText: false,
     title: 'new tab',
     isLoading: false,
@@ -27,8 +31,8 @@ var BrowserChrome = React.createClass({
   },
   componentWillMount: function () {
     // bind handlers to this object
-    for (var k in this.tabHandlers)  this.tabHandlers[k]  = this.tabHandlers[k].bind(this)
-    for (var k in this.navHandlers)  this.navHandlers[k]  = this.navHandlers[k].bind(this)
+    for (var k in this.tabHandlers) this.tabHandlers[k] = this.tabHandlers[k].bind(this)
+    for (var k in this.navHandlers) this.navHandlers[k] = this.navHandlers[k].bind(this)
     for (var k in this.pageHandlers) this.pageHandlers[k] = this.pageHandlers[k].bind(this)
   },
   componentDidMount: function () {
@@ -46,7 +50,7 @@ var BrowserChrome = React.createClass({
         self.setState(self.state)
 
         // make sure the search input has focus
-        self.getPage().getDOMNode().querySelector('#browser-page-search input').focus()
+        self.getPage().querySelector('#browser-page-search input').focus()
       } else if (e.keyCode == 27) { // esc
         // stop search
         self.getPageObject().isSearching = false
@@ -57,11 +61,11 @@ var BrowserChrome = React.createClass({
 
   getWebView: function (i) {
     i = (typeof i == 'undefined') ? this.state.currentPageIndex : i
-    return this.refs['page-'+i].refs.webview.getDOMNode()
+    return this.refs['page-' + i].refs.webview
   },
   getPage: function (i) {
     i = (typeof i == 'undefined') ? this.state.currentPageIndex : i
-    return this.refs['page-'+i]
+    return this.refs['page-' + i]
   },
   getPageObject: function (i) {
     i = (typeof i == 'undefined') ? this.state.currentPageIndex : i
@@ -99,29 +103,37 @@ var BrowserChrome = React.createClass({
     menu.append(new MenuItem({ label: 'New Tab', click: function () { self.createTab() } }))
     menu.append(new MenuItem({ label: 'Duplicate', click: function () { self.createTab(self.getPageObject(pageIndex).location) } }))
     menu.append(new MenuItem({ type: 'separator' }))
-    menu.append(new MenuItem({ label: 'Close Tab', click: function() { self.closeTab(pageIndex) } }))
+    menu.append(new MenuItem({ label: 'Close Tab', click: function () { self.closeTab(pageIndex) } }))
     menu.popup(remote.getCurrentWindow())
   },
   locationContextMenu: function (el) {
     var self = this
     var menu = new Menu()
-    menu.append(new MenuItem({ label: 'Copy', click: function () {
-      clipboard.writeText(el.value)
-    }}))
-    menu.append(new MenuItem({ label: 'Cut', click: function () {
-      clipboard.writeText(el.value.slice(el.selectionStart, el.selectionEnd))
-      self.getPageObject().location = el.value.slice(0, el.selectionStart) + el.value.slice(el.selectionEnd)
-    }}))
-    menu.append(new MenuItem({ label: 'Paste', click: function() {
-      var l = el.value.slice(0, el.selectionStart) + clipboard.readText() + el.value.slice(el.selectionEnd)
-      self.getPageObject().location = l
-    }}))
-    menu.append(new MenuItem({ label: 'Paste and Go', click: function() {
-      var l = el.value.slice(0, el.selectionStart) + clipboard.readText() + el.value.slice(el.selectionEnd)
-      self.getPageObject().location = l
-      self.getPage().navigateTo(l)
-    }}))
-    menu.popup(remote.getCurrentWindow())    
+    menu.append(new MenuItem({
+      label: 'Copy', click: function () {
+        clipboard.writeText(el.value)
+      }
+    }))
+    menu.append(new MenuItem({
+      label: 'Cut', click: function () {
+        clipboard.writeText(el.value.slice(el.selectionStart, el.selectionEnd))
+        self.getPageObject().location = el.value.slice(0, el.selectionStart) + el.value.slice(el.selectionEnd)
+      }
+    }))
+    menu.append(new MenuItem({
+      label: 'Paste', click: function () {
+        var l = el.value.slice(0, el.selectionStart) + clipboard.readText() + el.value.slice(el.selectionEnd)
+        self.getPageObject().location = l
+      }
+    }))
+    menu.append(new MenuItem({
+      label: 'Paste and Go', click: function () {
+        var l = el.value.slice(0, el.selectionStart) + clipboard.readText() + el.value.slice(el.selectionEnd)
+        self.getPageObject().location = l
+        self.getPage().navigateTo(l)
+      }
+    }))
+    menu.popup(remote.getCurrentWindow())
   },
   webviewContextMenu: function (e) {
     var self = this
@@ -139,7 +151,12 @@ var BrowserChrome = React.createClass({
       menu.append(new MenuItem({ label: 'Copy', click: function () { self.getWebView().copy() } }))
     menu.append(new MenuItem({ label: 'Select All', click: function () { self.getWebView().selectAll() } }))
     menu.append(new MenuItem({ type: 'separator' }))
-    menu.append(new MenuItem({ label: 'Inspect Element', click: function() { self.getWebView().inspectElement(e.x, e.y) } }))
+    menu.append(new MenuItem({
+      label: 'Inspect Element', click: function () {
+        //this does not work at present, the position of the element has to be determined.
+        //self.getWebView().inspectElement(e.x, e.y)
+      }
+    }))
     menu.popup(remote.getCurrentWindow())
   },
 
@@ -184,12 +201,12 @@ var BrowserChrome = React.createClass({
       this.getWebView().reload()
     },
     onClickBundles: function () {
-      var location = urllib.parse(this.getWebView().getUrl()).path
-      this.getPage().navigateTo('/bundles/view.html#'+location)
+      var location = urllib.parse(this.getWebView().getURL()).path
+      this.getPage().navigateTo('/bundles/view.html#' + location)
     },
     onClickVersions: function () {
-      var location = urllib.parse(this.getWebView().getUrl()).path
-      this.getPage().navigateTo('/bundles/versions.html#'+location)
+      var location = urllib.parse(this.getWebView().getURL()).path
+      this.getPage().navigateTo('/bundles/versions.html#' + location)
     },
     onClickSync: console.log.bind(console, 'sync'),
     onEnterLocation: function (location) {
@@ -198,7 +215,7 @@ var BrowserChrome = React.createClass({
     onChangeLocation: function (location) {
       var page = this.getPageObject()
       page.location = location
-      this.setState(this.state)      
+      this.setState(this.state)
     },
     onLocationContextMenu: function (e) {
       this.locationContextMenu(e.target)
@@ -221,7 +238,7 @@ var BrowserChrome = React.createClass({
       // update state
       var webview = this.getWebView(pageIndex)
       page.statusText = false
-      page.location = webview.getUrl()
+      page.location = webview.getURL()
       page.canGoBack = webview.canGoBack()
       page.canGoForward = webview.canGoForward()
       if (!page.title)
@@ -232,7 +249,7 @@ var BrowserChrome = React.createClass({
     onPageTitleSet: function (e) {
       var page = this.getPageObject()
       page.title = e.title
-      page.location = this.getWebView().getUrl()
+      page.location = this.getWebView().getURL()
       this.setState(this.state)
     },
     onContextMenu: function (e, page, pageIndex) {
@@ -248,8 +265,7 @@ var BrowserChrome = React.createClass({
       }
     }
   },
-
-  render: function() {
+  render: function () {
     var self = this
     return <div>
       <BrowserTabs ref="tabs" pages={this.state.pages} currentPageIndex={this.state.currentPageIndex} {...this.tabHandlers} />
@@ -257,14 +273,14 @@ var BrowserChrome = React.createClass({
       {this.state.pages.map(function (page, i) {
         if (!page)
           return
-        return <BrowserPage ref={'page-'+i} key={'page-'+i} {...self.pageHandlers} page={page} pageIndex={i} isActive={i == self.state.currentPageIndex} />
+        return <BrowserPage ref={'page-' + i} key={'page-' + i} {...self.pageHandlers} page={page} pageIndex={i} isActive={i == self.state.currentPageIndex} />
       })}
     </div>
   }
 })
 
 // render
-React.render(
+ReactDOM.render(
   <BrowserChrome />,
   document.getElementById('browser-chrome')
 )

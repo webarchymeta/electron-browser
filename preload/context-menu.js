@@ -1,6 +1,6 @@
-var ipc = require('ipc')
+var ipc = require('electron').ipcRenderer;
 
-function triggerMenu (data) {
+function triggerMenu(data) {
   ipc.sendToHost('contextmenu-data', data)
 }
 

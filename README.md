@@ -13,6 +13,7 @@ To run this code, follow these steps:
 git clone https://github.com/pfrazee/electron-browser
 cd electron-browser
 npm install -d
+webpack
 npm start
 ```
 
