@@ -153,8 +153,9 @@ var BrowserChrome = React.createClass({
     menu.append(new MenuItem({ type: 'separator' }))
     menu.append(new MenuItem({
       label: 'Inspect Element', click: function () {
-        //this does not work at present, the position of the element has to be determined.
-        //self.getWebView().inspectElement(e.x, e.y)
+        if (window.currentContextMenuPos) {
+            self.getWebView().inspectElement(window.currentContextMenuPos.x, window.currentContextMenuPos.y);
+        }
       }
     }))
     menu.popup(remote.getCurrentWindow())
@@ -253,7 +254,9 @@ var BrowserChrome = React.createClass({
       this.setState(this.state)
     },
     onContextMenu: function (e, page, pageIndex) {
-      this.getWebView(pageIndex).send('get-contextmenu-data', { x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY })
+      let pageIndx = typeof pageIndex === 'number' ? pageIndex : undefined;
+      window.currentContextMenuPos = { x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY };
+      this.getWebView(pageIndx).send('get-contextmenu-data', window.currentContextMenuPos);
     },
     onIpcMessage: function (e, page) {
       if (e.channel == 'status') {
