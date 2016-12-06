@@ -65,12 +65,15 @@ const BrowserPage = React.createClass({
   componentDidMount: function () {
     // setup resize events
     window.addEventListener('resize', resize)
-    resize()
 
     // attach webview events
     for (var k in webviewEvents)
       this.refs.webview.addEventListener(k, webviewHandler(this, webviewEvents[k]))
 
+    this.refs.webview.addEventListener('did-stop-loading', () => {
+      resize()
+    })
+    
     // set location, if given
     if (this.props.page.location)
       this.navigateTo(this.props.page.location)
