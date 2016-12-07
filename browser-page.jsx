@@ -70,9 +70,7 @@ const BrowserPage = React.createClass({
     for (var k in webviewEvents)
       this.refs.webview.addEventListener(k, webviewHandler(this, webviewEvents[k]))
 
-    this.refs.webview.addEventListener('did-stop-loading', () => {
-      resize()
-    })
+    setTimeout(resize, 1);
     
     // set location, if given
     if (this.props.page.location)
